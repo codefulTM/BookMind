@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: bookmind
+  main:
+    # Có cả Web MVC và WebFlux trên classpath (WebFlux chỉ để dùng WebClient/Reactor).
+    web-application-type: servlet
+  datasource:
+    url: jdbc:sqlite:${bookmind.home}/bookmind.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 4
+      connection-init-sql: PRAGMA foreign_keys = ON
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  address: 127.0.0.1
+  port: 8080
+
+bookmind:
+  home: ${BOOKMIND_HOME:${user.home}/.bookmind}
+  library:
+    dir: ${bookmind.home}/library
+    verify-hash-on-startup: false
+    max-book-size: 200MB
+    allowed-formats: [ pdf, epub ]
+  processing:
+    parallel-jobs: 1
+    max-attempts: 3
+    chunk-size: 800
+    chunk-overlap: 120
+  ocr:
+    default-language: vie
+    min-text-density: 30
+    engine: paddleocr
+    sidecar-command: python3
+    sidecar-script: scripts/paddle_ocr.py
+    model-dir: ${bookmind.home}/models/paddleocr
+    device: cpu
+    timeout-seconds: 120
+  search:
+    top-k: 10
+    min-score: 0.25
+  chat:
+    max-context-tokens: 6000
+    history-window: 10

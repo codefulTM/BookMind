@@ -82,36 +82,7 @@ Thứ tự thực tế nên làm: **M0 → M1 → M2 → M3 → M8 → M5 → M6
 
 ---
 
-## 4. Spike kỹ thuật phải làm trước (làm trong M0–M1)
-
-Đây là các điểm chưa chắc chắn, nếu sai sẽ phải đổi kiến trúc. Mỗi spike tối đa 2–3 giờ, viết kết luận vào `docs/spikes.md`.
-
-### S1. sqlite-vec trên JDBC + connection pool
-
-- [ ] Tải `sqlite-vec` native cho Linux (`vec0.so`) và load được bằng `org.sqlite.SQLiteConfig#enableLoadExtension(true)` + `connection.loadExtension(path)`.
-- [ ] Xác nhận load extension **trên mọi connection** của Hikari (dùng `connectionInitSql` hoặc custom `DataSource`), không chỉ connection đầu tiên.
-- [ ] Thử `CREATE VIRTUAL TABLE ... USING vec0(embedding float[768])` và query `MATCH` + `k = ?`.
-- [ ] Kết luận: nếu bị chặn (native lib, quyền, đóng gói jar) → chọn fallback **Qdrant local (Docker)** hoặc **LanceDB Java**, giữ nguyên `VectorStore` port.
-
-### S2. Flyway + SQLite
-
-- [ ] Flyway bản dùng với Spring Boot 3.x có hỗ trợ SQLite chưa (Flyway 10 tách module DB). Nếu thiếu → thêm module tương ứng hoặc pin Flyway 9.x.
-- [ ] Chạy `V1__init.sql` trên file DB mới, restart chạy lại không lỗi.
-
-### S3. PaddleOCR sidecar round-trip
-
-- [ ] Cài `paddleocr` + `paddlepaddle` trong venv, chạy nhận 1 ảnh PNG → JSON.
-- [ ] Đo thời gian/trang (CPU) để chọn DPI render (150/200/300) và timeout mặc định.
-- [ ] Xác nhận chạy được trên HĐH đích; ghi lại cách cài vào `scripts/README.md`.
-
-### S4. Reactor Flux → SseEmitter
-
-- [ ] Viết 20 dòng thử: `Flux<String>` giả lập stream 20 token, đẩy qua `SseEmitter`, client `EventSource` nhận đủ, huỷ giữa chừng không leak thread.
-- [ ] Xác nhận Spring MVC + WebFlux cùng classpath vẫn chạy servlet (không set `web-application-type=reactive`).
-
----
-
-## 5. Chi tiết từng milestone
+## 4. Chi tiết từng milestone
 
 ### M0 — Bootstrap (1 ngày)
 
@@ -177,7 +148,7 @@ Domain (`com.bookmind.domain`):
 
 Persistence:
 
-- [ ] `V1__init.sql` (xem §6) tạo `book`, `book_content`, `book_page`, `book_chunk`, `collection`, `collection_book`, `conversation`, `message`, `message_citation`, `ai_provider_config`, `processing_job`, `app_meta`, `embedding_cache`.
+- [ ] `V1__init.sql` (xem §5) tạo `book`, `book_content`, `book_page`, `book_chunk`, `collection`, `collection_book`, `conversation`, `message`, `message_citation`, `ai_provider_config`, `processing_job`, `app_meta`, `embedding_cache`.
 - [ ] JPA entities + mappers + `JpaBookRepositoryAdapter implements BookRepository`, tương tự cho Collection/Conversation.
 - [ ] `BookRepository` port: `save`, `findById`, `findByContentHash`, `list(filter, sort, page)`, `delete`, `existsByHash`.
 
@@ -456,7 +427,7 @@ java -jar build/libs/bookmind-*.jar
 
 ---
 
-## 6. Schema DB (Flyway)
+## 5. Schema DB (Flyway)
 
 ### V1 — bảng lõi
 
@@ -583,7 +554,7 @@ CREATE VIRTUAL TABLE chunk_embedding USING vec0(
 
 ---
 
-## 7. API contract (ví dụ then chốt)
+## 6. API contract (ví dụ then chốt)
 
 ### POST `/api/books`
 
@@ -635,7 +606,7 @@ data: {"messageId":"...","citations":[1]}
 
 ---
 
-## 8. Frontend — route & thành phần
+## 7. Frontend — route & thành phần
 
 | Route | Page | Thành phần chính |
 |---|---|---|
@@ -655,7 +626,7 @@ Quy ước:
 
 ---
 
-## 9. Ma trận kiểm thử
+## 8. Ma trận kiểm thử
 
 | Tầng | Test gì | Công cụ | Khi nào |
 |---|---|---|---|
@@ -677,12 +648,12 @@ Tiêu chí tối thiểu trước khi coi 1 milestone là xong:
 
 ---
 
-## 10. Rủi ro và cách giảm thiểu
+## 9. Rủi ro và cách giảm thiểu
 
 | Rủi ro | Khả năng | Ảnh hưởng | Giảm thiểu |
 |---|---|---|---|
-| sqlite-vec khó load trong Java/pool | Trung bình | Cao (search) | Spike S1 trước M5; fallback Qdrant local qua `VectorStore` port |
-| Flyway thiếu module SQLite | Trung bình | Trung bình | Spike S2; fallback migration runner tự viết hoặc pin Flyway 9 |
+| sqlite-vec khó load trong Java/pool | Trung bình | Cao (search) | Làm `SqliteVecVectorStore` đầu tiên trong M5; nếu kẹt quá nửa ngày → fallback Qdrant local qua `VectorStore` port |
+| Flyway thiếu module SQLite | Trung bình | Trung bình | Làm migration đầu tiên ngay trong M1; nếu thiếu module → thêm dependency hoặc pin Flyway 9 |
 | PaddleOCR nặng/khó cài trên máy người dùng | Cao | Trung bình | Preflight + thông báo hướng dẫn; OCR là job có thể fail và retry; không chặn sách có text layer |
 | OCR chậm, tốn RAM với sách 500 trang | Cao | Trung bình | Render theo batch 10–20 trang, DPI 200, timeout/trang, `parallel-jobs=1` |
 | Đổi embedding model làm lệch dim | Trung bình | Cao | Lưu model+dim, chặn search nếu lệch, UI yêu cầu reindex |
@@ -695,7 +666,7 @@ Tiêu chí tối thiểu trước khi coi 1 milestone là xong:
 
 ---
 
-## 11. Definition of Done & quy ước
+## 10. Definition of Done & quy ước
 
 Một milestone chỉ "Done" khi:
 
@@ -718,11 +689,11 @@ Nhánh: `main` luôn chạy được; làm trên `feat/<milestone>-<việc>` n�
 
 ---
 
-## 12. Lịch trình gợi ý (full-time)
+## 11. Lịch trình gợi ý (full-time)
 
 | Tuần | Nội dung |
 |---|---|
-| 1 | M0 + M1 + spike S1/S2 |
+| 1 | M0 + M1 |
 | 2 | M2 (import + worker + UI list) |
 | 3 | M3 (extract) + M8 (AI config) |
 | 4 | M5 (chunk/embed/index) + M6 (search) |
@@ -734,7 +705,7 @@ Nếu làm bán thời gian: nhân đôi thời lượng, giữ nguyên thứ t�
 
 ---
 
-## 13. Không làm ở giai đoạn này (out of scope có chủ đích)
+## 12. Không làm ở giai đoạn này (out of scope có chủ đích)
 
 - Multi-user, auth, sync, mobile app (đã loại trong requirements).
 - Upload qua browser (chỉ nhận đường dẫn file local — theo kiến trúc local-first).
@@ -745,10 +716,9 @@ Nếu làm bán thời gian: nhân đôi thời lượng, giữ nguyên thứ t�
 
 ---
 
-## 14. Checklist tổng (in ra và tick dần)
+## 13. Checklist tổng (in ra và tick dần)
 
 - [ ] M0 Bootstrap backend + frontend
-- [ ] Spike S1 sqlite-vec, S2 Flyway, S3 OCR, S4 SSE
 - [ ] M1 Domain + Flyway V1 + repository
 - [ ] M2 Import + job queue + library UI
 - [ ] M3 Extract PDF/EPUB + text viewer
