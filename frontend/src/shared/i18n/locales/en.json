@@ -1,0 +1,55 @@
+{
+  "app": {
+    "name": "BookMind",
+    "tagline": "Your personal book library"
+  },
+  "nav": {
+    "library": "Library",
+    "search": "Search",
+    "chat": "Chat",
+    "settings": "Settings"
+  },
+  "common": {
+    "language": "Language",
+    "comingSoon": "Coming soon"
+  },
+  "library": {
+    "title": "Library",
+    "subtitle": "All your books in one place.",
+    "emptyTitle": "Your library is empty",
+    "emptyDescription": "Add PDF or EPUB books to get started. Adding books arrives in milestone M2.",
+    "addBook": "Add book"
+  },
+  "search": {
+    "title": "Search",
+    "subtitle": "Semantic search across your whole library.",
+    "placeholder": "Ask a question or enter keywords…",
+    "emptyTitle": "Nothing to search yet",
+    "emptyDescription": "Search results will appear here once your books are indexed.",
+    "comingSoon": "Semantic search arrives in M6."
+  },
+  "chat": {
+    "title": "Chat",
+    "subtitle": "Ask questions about your books, with citations.",
+    "emptyTitle": "No conversations yet",
+    "emptyDescription": "Start a conversation to ask about the content of your books.",
+    "comingSoon": "Chat + RAG arrives in M7."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure your AI provider and application options.",
+    "aiTitle": "AI configuration",
+    "aiDescription": "Base URL, chat model, embedding model and API key will be managed here.",
+    "comingSoon": "AI configuration arrives in M8."
+  },
+  "bookDetail": {
+    "title": "Book details",
+    "subtitle": "Book information and content.",
+    "bookId": "Book ID"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The path you opened does not exist.",
+    "backHome": "Back to library"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "app": {
+    "name": "BookMind",
+    "tagline": "Thư viện sách cá nhân của bạn"
+  },
+  "nav": {
+    "library": "Thư viện",
+    "search": "Tìm kiếm",
+    "chat": "Chat",
+    "settings": "Cài đặt"
+  },
+  "common": {
+    "language": "Ngôn ngữ",
+    "comingSoon": "Sắp ra mắt"
+  },
+  "library": {
+    "title": "Thư viện",
+    "subtitle": "Tất cả sách của bạn ở một nơi.",
+    "emptyTitle": "Thư viện đang trống",
+    "emptyDescription": "Thêm sách PDF hoặc EPUB để bắt đầu. Tính năng thêm sách sẽ có ở milestone M2.",
+    "addBook": "Thêm sách"
+  },
+  "search": {
+    "title": "Tìm kiếm",
+    "subtitle": "Tìm kiếm theo ngữ nghĩa trong toàn bộ thư viện.",
+    "placeholder": "Nhập câu hỏi hoặc từ khoá…",
+    "emptyTitle": "Chưa có nội dung để tìm",
+    "emptyDescription": "Sau khi sách được index, kết quả tìm kiếm sẽ xuất hiện ở đây.",
+    "comingSoon": "Tìm kiếm ngữ nghĩa sẽ có ở M6."
+  },
+  "chat": {
+    "title": "Chat",
+    "subtitle": "Hỏi đáp với sách của bạn, kèm trích dẫn.",
+    "emptyTitle": "Chưa có cuộc trò chuyện",
+    "emptyDescription": "Tạo cuộc trò chuyện mới để hỏi về nội dung sách.",
+    "comingSoon": "Chat + RAG sẽ có ở M7."
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Cấu hình AI provider và các tuỳ chọn ứng dụng.",
+    "aiTitle": "Cấu hình AI",
+    "aiDescription": "Base URL, model chat, model embedding và API key sẽ được quản lý ở đây.",
+    "comingSoon": "Cấu hình AI sẽ có ở M8."
+  },
+  "bookDetail": {
+    "title": "Chi tiết sách",
+    "subtitle": "Thông tin và nội dung sách.",
+    "bookId": "Mã sách"
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "description": "Đường dẫn bạn mở không tồn tại.",
+    "backHome": "Về thư viện"
+  }
+}

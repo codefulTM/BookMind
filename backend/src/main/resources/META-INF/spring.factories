@@ -1,0 +1,4 @@
+# Đăng ký AppHomeInitializer để Spring Boot tự động gọi khi khởi động.
+# Process này chạy trước khi application context được tạo, đảm bảo thư mục BookMind HOME tồn tại.
+org.springframework.boot.EnvironmentPostProcessor=\
+com.bookmind.infrastructure.config.AppHomeInitializer

@@ -1,0 +1,25 @@
+# Build output
+backend/build/
+backend/.gradle/
+.gradle/
+frontend/dist/
+frontend/node_modules/
+
+# Local data and secrets
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!backend/.env.example
+
+# Python / OCR
+__pycache__/
+*.pyc
+models/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store

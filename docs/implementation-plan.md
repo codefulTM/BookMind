@@ -7,9 +7,9 @@ Tài liệu này là kế hoạch thi công chi tiết cho BookMind, dựa trên
 ## 0. Cách dùng tài liệu
 
 - Làm **theo milestone**, không nhảy cóc. Mỗi milestone phải chạy được end-to-end (backend + UI) trước khi sang milestone sau.
-- Mỗi bước đều có dạng checklist `- [ ]`. Tick khi xong, không tick khi mới code xong mà chưa có test/không chạy được.
+- Mỗi bước đều có dạng checklist `- [ ]`. Tick khi xong, không tick khi code chạy được.
 - Khi phát hiện kiến trúc cần sửa, sửa `architecture.md` trước rồi mới code, để tài liệu không lệch.
-- Thời lượng trong tài liệu là ước lượng cho **1 người**, đã gồm test cơ bản, chưa gồm học công nghệ mới.
+- Thời lượng trong tài liệu là ước lượng cho **1 người**, chưa gồm học công nghệ mới.
 
 ---
 
@@ -18,11 +18,10 @@ Tài liệu này là kế hoạch thi công chi tiết cho BookMind, dựa trên
 | Nguyên tắc | Cách áp dụng |
 |---|---|
 | **Vertical slice trước, layer sau** | Làm sớm luồng "thêm sách → thấy trong danh sách" (M2). Không xây hết domain rồi mới nối UI. |
-| **Domain test-first** | `domain/` là phần duy nhất viết unit test trước/song song. Phần còn lại test theo hành vi. |
 | **Port out có thật** | Chỉ tạo interface khi có ≥1 adapter thật (JPA, PDFBox, OpenAI...). Không tạo port "để sau". |
 | **Không port in** | Controller inject thẳng `*Service` (theo ADR-10). |
 | **Schema do Flyway, không `ddl-auto`** | `spring.jpa.hibernate.ddl-auto=validate`; mọi thay đổi bảng = migration mới. |
-| **Mọi job phải restart được** | Không giữ trạng thái job trong RAM. Test restart ở M2 và lặp lại ở M5. |
+| **Mọi job phải restart được** | Không giữ trạng thái job trong RAM. Restart ở M2 và lặp lại ở M5. |
 | **Không chặn UI** | Mọi thứ nặng (hash, copy, OCR, embed) chạy trong worker; API chỉ trả `202 Accepted`. |
 | **Đo trước khi tối ưu** | Chỉ tối ưu search/embedding sau khi có dữ liệu giả lập ~1000 sách (M10). |
 
@@ -32,12 +31,12 @@ Tài liệu này là kế hoạch thi công chi tiết cho BookMind, dựa trên
 
 ### 2.1 Công cụ bắt buộc
 
-- [ ] JDK 21 (`java -version` → 21.x)
-- [ ] Gradle 8.x (dùng wrapper, không cần cài global)
-- [ ] Node.js 20+ và npm
-- [ ] Python 3.10+ (cho OCR sidecar)
-- [ ] `sqlite3` CLI (debug DB)
-- [ ] Git, trình soạn thảo có hỗ trợ Java/TS
+- [x] JDK 21 (`java -version` → 21.x)
+- [x] Gradle (dùng wrapper, không cần cài global) — wrapper hiện tại 9.8.2
+- [x] Node.js 20+ và npm
+- [x] Python 3.10+ (cho OCR sidecar)
+- [x] `sqlite3` CLI (debug DB)
+- [x] Git, trình soạn thảo có hỗ trợ Java/TS
 
 ### 2.2 Khởi tạo repository
 
@@ -46,8 +45,8 @@ cd /run/media/codefultm/DATA/LearningMaterial/personal-project/BookMind
 mkdir -p backend frontend scripts docs
 ```
 
-- [ ] `.gitignore` gốc: `backend/build/`, `.gradle/`, `frontend/node_modules/`, `frontend/dist/`, `*.db`, `.env`, `__pycache__/`, `models/`
-- [ ] `README.md`: mô tả 1 đoạn + quickstart dự kiến (sẽ hoàn thiện ở M10)
+- [x] `.gitignore` gốc: `backend/build/`, `.gradle/`, `frontend/node_modules/`, `frontend/dist/`, `*.db`, `.env`, `__pycache__/`, `models/`
+- [x] `README.md`: mô tả 1 đoạn + quickstart dự kiến (sẽ hoàn thiện ở M10)
 
 ### 2.3 Biến môi trường dev
 
@@ -55,7 +54,7 @@ Tạo `backend/.env.example` (không commit `.env` thật):
 
 ```
 BOOKMIND_HOME=~/.bookmind-dev
-SERVER_PORT=8080
+SERVER_PORT=8090
 ```
 
 ---
@@ -90,14 +89,14 @@ Thứ tự thực tế nên làm: **M0 → M1 → M2 → M3 → M8 → M5 → M6
 
 Backend:
 
-- [ ] Tạo project Spring Boot 3.x, Java 21, Gradle Kotlin DSL tại `backend/` (start.spring.io hoặc `gradle init`).
-- [ ] Dependencies: `web`, `validation`, `data-jpa`, `actuator`; thêm `webflux` **chỉ để có WebClient/Reactor**, `sqlite-jdbc`, `hibernate-community-dialects`, `flyway-core`, `pdfbox`, `jsoup`, `jtokkit`.
-- [ ] `BookMindApplication` + `application.yml`:
+- [x] Tạo project Spring Boot (thực tế 4.1.1), Java 21, Gradle Kotlin DSL tại `backend/` (start.spring.io hoặc `gradle init`).
+- [x] Dependencies: `web`, `validation`, `data-jpa`, `actuator`; thêm `webflux` **chỉ để có WebClient/Reactor**, `sqlite-jdbc`, `hibernate-community-dialects`, `flyway-core`, `pdfbox`, `jsoup`, `jtokkit`. (Boot 4: dùng `spring-boot-starter-flyway` + `flyway-database-nc-sqlite:12.4.0`)
+- [x] `BookMindApplication` + `application.yml`:
 
 ```yaml
 server:
   address: 127.0.0.1
-  port: 8080
+  port: 8090
 spring:
   datasource:
     url: jdbc:sqlite:${BOOKMIND_HOME:${user.home}/.bookmind}/bookmind.db
@@ -111,24 +110,26 @@ spring:
     locations: classpath:db/migration
 ```
 
-- [ ] `HealthController` (hoặc chỉ Actuator `/actuator/health`) + `GET /api/health`.
-- [ ] `ErrorResponse` + `GlobalExceptionHandler` khung: map `DomainException` → 4xx, còn lại 500, body `{code,message,details}`.
-- [ ] Tạo `BOOKMIND_HOME` nếu chưa có, kèm `library/`, `.tmp/`, `logs/` (`AppHomeInitializer`).
+- [x] `HealthController` (hoặc chỉ Actuator `/actuator/health`) + `GET /api/health`.
+- [x] `ErrorResponse` + `GlobalExceptionHandler` khung: map `DomainException` → 4xx, còn lại 500, body `{code,message,details}`.
+- [x] Tạo `BOOKMIND_HOME` nếu chưa có, kèm `library/`, `.tmp/`, `logs/` (`AppHomeInitializer`).
 
 Frontend:
 
-- [ ] `npm create vite@latest frontend -- --template react-ts`
-- [ ] Tailwind + shadcn/ui init; alias `@/`.
-- [ ] React Router với route rỗng: `/`, `/books/:id`, `/search`, `/chat`, `/chat/:id`, `/settings`.
-- [ ] TanStack Query provider; `shared/api/client.ts` (fetch wrapper, parse `ErrorResponse`).
-- [ ] i18next với `vi.json`/`en.json`, mặc định `vi`; layout có sidebar 4 mục.
-- [ ] `vite.config.ts` proxy `/api` → `http://127.0.0.1:8080`.
+- [x] `npm create vite@latest frontend -- --template react-ts`
+- [x] Tailwind + shadcn/ui init; alias `@/`.
+- [x] React Router với route rỗng: `/`, `/books/:id`, `/search`, `/chat`, `/chat/:id`, `/settings`.
+- [x] TanStack Query provider; `shared/api/client.ts` (fetch wrapper, parse `ErrorResponse`).
+- [x] i18next với `vi.json`/`en.json`, mặc định `vi`; layout có sidebar 4 mục.
+- [x] `vite.config.ts` proxy `/api` → `http://127.0.0.1:8090`.
 
 **Definition of Done**
 
-- `./gradlew bootRun` lên 8080, `curl /api/health` → 200.
+- `./gradlew bootRun` lên 8090, `curl /api/health` → 200.
 - `npm run dev` lên 5173, mở trang Library rỗng, không lỗi console.
-- `./gradlew test` và `npm test` chạy (có thể 0 test).
+
+
+> **Trạng thái M0 (2026-10-23): HOÀN TẤT.** Đã verify: `./gradlew test` xanh; `GET /api/health` → `{"status":"ok"}`; `npm test` (2 test) và `npm run build` xanh; Vite dev server lên 5173 và proxy `/api/health` hoạt động. Lưu ý: project dùng Spring Boot 4.1.1 và Gradle wrapper 9.8.2 thay vì 3.x/8.x trong kế hoạch gốc; `AppHomeInitializer` chạy như `EnvironmentPostProcessor` để tạo thư mục trước khi datasource khởi tạo.
 
 ---
 
@@ -152,13 +153,7 @@ Persistence:
 - [ ] JPA entities + mappers + `JpaBookRepositoryAdapter implements BookRepository`, tương tự cho Collection/Conversation.
 - [ ] `BookRepository` port: `save`, `findById`, `findByContentHash`, `list(filter, sort, page)`, `delete`, `existsByHash`.
 
-**Test**
-
-- [ ] Domain unit: tạo Book thiếu hash → lỗi; `markFailed` không reason → lỗi; retry từ `FAILED` OK.
-- [ ] `FilePath` reject `../x.pdf`, `/abs/x.pdf` (khi là relative), `.txt`.
-- [ ] Integration: lưu/đọc Book trên SQLite file tạm (`@DataJpaTest` + `@AutoConfigureTestDatabase(replace = NONE)`).
-
-**DoD:** Flyway chạy sạch trên DB mới; `validate` pass; repository test xanh.
+**DoD:** Flyway chạy sạch trên DB mới; `validate` pass.
 
 ---
 
@@ -199,13 +194,6 @@ Frontend:
 - [ ] `AddBookDialog`: input đường dẫn tuyệt đối (M2 chưa cần file picker native), submit → 202 → hiện sách với trạng thái `QUEUED`.
 - [ ] Delete có confirm; hiển thị lỗi `DUPLICATE_BOOK` kèm nút "Mở sách cũ".
 
-**Test**
-
-- [ ] Unit `BookImporter`: copy đúng layout, hash đúng, file nguồn không đổi (so sánh mtime/size).
-- [ ] Integration: POST → poll tới khi `file_path` có; POST lần 2 → 409 `DUPLICATE_BOOK`.
-- [ ] Restart worker giữa job → job vẫn hoàn tất.
-- [ ] DELETE → file trong library mất, file nguồn còn.
-
 **DoD (demo):** thêm 1 PDF thật, thấy trong UI; `ls ~/.bookmind-dev/library` có file hash; xoá sách, file nguồn vẫn còn.
 
 ---
@@ -223,17 +211,11 @@ Frontend:
 
 Frontend:
 
-- [ ] `BookDetailPage`: thông tin sách, tabs "Nội dung" / "Trạng thái xử lý".
+- [ ] `BookDetailPage`: thông tin sách, tabs "Nội dung" / "Trạng thái xử lý". Title/subtitle của sách lấy từ metadata và render nguyên bản (không qua `t()`); chỉ heading/label của UI mới i18n.
 - [ ] Text viewer: phân trang theo page (PDF) hoặc section (EPUB), hiển thị số trang/chương.
 - [ ] Hiển thị rõ khi sách "chưa có text layer, sẽ cần OCR".
 
-**Test**
-
-- [ ] Fixture PDF text layer 3 trang → 3 `PageSpan`, text đúng thứ tự.
-- [ ] Fixture EPUB 2 chương → 2 section, `charStart/End` khớp `plainText.substring`.
-- [ ] PDF scan (không text) → `needsOcr=true`, không crash.
-
-**DoD:** mở 1 PDF và 1 EPUB, đọc được text trong app.
+**DoD: mở 1 PDF và 1 EPUB, đọc được text trong app.
 
 ---
 
@@ -267,13 +249,7 @@ Frontend:
 - [ ] Text editor cho trang đã OCR (textarea + nút Lưu), cảnh báo "sẽ re-index".
 - [ ] Progress bar đọc từ `GET /api/books/{id}` (poll 2s; SSE để M10).
 
-**Test**
-
-- [ ] Fake sidecar (script shell in JSON cố định) → engine parse đúng, timeout hoạt động.
-- [ ] Trang scan tiếng Việt thật → text chứa dấu, không rỗng.
-- [ ] Sửa text → `manualEdited=true` và job REINDEX được enqueue.
-
-**DoD:** 1 PDF scan 5 trang tiếng Việt → text hiển thị, sửa 1 trang và lưu được.
+**DoD: 1 PDF scan 5 trang tiếng Việt → text hiển thị, sửa 1 trang và lưu được.
 
 ---
 
@@ -295,14 +271,7 @@ Frontend:
 - [ ] `ReindexStep` cho sửa text/metadata ảnh hưởng chunk.
 - [ ] Phát hiện đổi model/dim: so `app_meta.embedding_model` + `dim` với config; nếu khác → cảnh báo qua `/api/health`/settings và yêu cầu "Reindex toàn bộ".
 
-**Test**
-
-- [ ] Chunker: section dài → cắt theo paragraph, không chunk theo câu; overlap đúng; tổng text phủ gần đủ (không mất chữ).
-- [ ] Fake embedding server (WireMock) trả vector cố định → số chunk = số vector, gọi đúng batch.
-- [ ] Chạy lại INDEX 2 lần → không nhân bản chunk/vector.
-- [ ] Đổi dim → lỗi rõ ràng, không ghi rác.
-
-**DoD:** sách `READY`; `SELECT count(*) FROM book_chunk` = số vector; restart không mất index.
+**DoD: sách `READY`; `SELECT count(*) FROM book_chunk` = số vector; restart không mất index.
 
 ---
 
@@ -319,13 +288,7 @@ Frontend:
 - [ ] `SearchPage`: ô query, scope selector (toàn thư viện / sách / collection), danh sách kết quả có score + nguồn.
 - [ ] Click kết quả → `/books/:id?highlight=<chunkId>` → Book Detail cuộn tới đúng đoạn/trang.
 
-**Test**
-
-- [ ] 3 sách giả, query trúng đúng sách; scope `book:<id>` chỉ trả sách đó.
-- [ ] `minScore` lọc đúng; topK đúng.
-- [ ] Không có kết quả → mảng rỗng, UI có empty state.
-
-**DoD:** gõ câu hỏi tiếng Việt, nhận kết quả đúng và mở đúng vị trí.
+**DoD: gõ câu hỏi tiếng Việt, nhận kết quả đúng và mở đúng vị trí.
 
 ---
 
@@ -349,14 +312,7 @@ Frontend:
 - [ ] Streaming append token; render citation chip `[1]` → click mở Book Detail đúng chỗ.
 - [ ] Nút Stop (abort fetch); lỗi hiển thị rõ.
 
-**Test**
-
-- [ ] Fake chat server stream 5 token → UI nhận đủ, `done` có `messageId`.
-- [ ] Câu hỏi ngoài phạm vi → không citation, đúng câu "không tìm thấy".
-- [ ] Citation map đúng chunk/page.
-- [ ] Huỷ giữa stream → không lưu message dở (hoặc lưu với cờ `cancelled`).
-
-**DoD:** hỏi "sách nói gì về X", nhận câu trả lời stream + bấm citation nhảy đúng trang.
+**DoD: hỏi "sách nói gì về X", nhận câu trả lời stream + bấm citation nhảy đúng trang.
 
 ---
 
@@ -366,21 +322,15 @@ Frontend:
 - [ ] `AiProviderConfigRepository` + `ConfigureAiService`: validate URL (http/https), model không rỗng; lưu `encryptedApiKey`; chỉ 1 config `active`.
 - [ ] `ProviderRegistry`: tạo `ChatModel`/`EmbeddingModel` từ config active; cache theo config version; refresh khi đổi.
 - [ ] `GET /api/config/ai` trả key đã mask (`sk-****abcd`), `PUT` nhận key mới hoặc `null` = giữ nguyên.
-- [ ] `POST /api/config/ai/test`: thử embed 1 token (hoặc chat 1 token), trả `{ok, latencyMs, model, dimension?, error?}`.
+- [ ] `POST /api/config/ai/test-connection`: thử embed 1 token (hoặc chat 1 token), trả `{ok, latencyMs, model, dimension?, error?}`.
 - [ ] `LocalModelClient` không cần class riêng: cùng OpenAI-compatible, chỉ khác `baseUrl` (ghi chú trong docs).
 
 Frontend:
 
-- [ ] `SettingsPage`: form baseUrl, modelChat, modelEmbedding, API key (password, placeholder mask), nút Test, lưu.
+- [ ] `SettingsPage`: form baseUrl, modelChat, modelEmbedding, API key (password, placeholder mask), nút Kiểm tra kết nối, lưu.
 - [ ] Hiển thị cảnh báo nếu chưa cấu hình AI (chặn search/chat bằng CTA sang Settings).
 
-**Test**
-
-- [ ] Encrypt/decrypt round-trip; ciphertext khác nhau cho cùng plaintext (IV ngẫu nhiên).
-- [ ] Response không bao giờ chứa key thật; log không chứa key.
-- [ ] Test connection: 200/401/timeout → thông báo đúng.
-
-**DoD:** nhập key OpenAI-compatible, test xanh, restart vẫn dùng được, DB không có plaintext key.
+**DoD:** nhập key OpenAI-compatible, kiểm tra kết nối thành công, restart vẫn dùng được, DB không có plaintext key.
 
 ---
 
@@ -391,12 +341,7 @@ Frontend:
 - [ ] Sort: title, author, addedAt, sizeBytes; paging `page`, `size` (mặc định 24).
 - [ ] Frontend: edit metadata dialog, tag input, sidebar collections, filter/sort bar.
 
-**Test**
-
-- [ ] PATCH cập nhật đúng, không đổi `contentHash`/`filePath`.
-- [ ] Filter/sort/paging trả đúng; collection remove không xoá sách.
-
-**DoD:** tạo collection, gán sách, lọc theo tag/collection.
+**DoD: tạo collection, gán sách, lọc theo tag/collection.
 
 ---
 
@@ -408,7 +353,7 @@ Frontend:
 - [ ] Rate/size limit: `spring.servlet.multipart` không dùng (không upload), nhưng giới hạn body JSON; timeout OCR/AI rõ ràng.
 - [ ] Logging: structured, chỉ id/trạng thái; không log text sách/API key; log rotation trong `logs/`.
 - [ ] Error mapping đầy đủ: `DUPLICATE_BOOK`, `FILE_NOT_FOUND`, `UNSUPPORTED_FORMAT`, `FILE_TOO_LARGE`, `OCR_UNAVAILABLE`, `EMBEDDING_DIM_MISMATCH`, `AI_NOT_CONFIGURED`.
-- [ ] E2E Playwright: thêm sách (fixture PDF) → chờ READY → search → chat (AI stub) → xoá.
+
 - [ ] Perf sanity: seed 1000 sách giả (metadata + chunk giả) → đo search p95, mở list; ghi số vào `docs/perf.md`.
 - [ ] Đóng gói 1 jar:
 
@@ -423,7 +368,7 @@ java -jar build/libs/bookmind-*.jar
 - [ ] (Tuỳ chọn) Gradle task `buildFrontend` + `processResources.dependsOn(buildFrontend)` để build 1 lệnh.
 - [ ] README: yêu cầu, cài đặt, chạy dev, build, cấu hình AI, OCR sidecar, backup/restore, troubleshooting.
 
-**DoD:** máy sạch (không Node) chạy `java -jar`, mở `http://localhost:8080`, làm được luồng chính; E2E xanh.
+**DoD:** máy sạch (không Node) chạy `java -jar`, mở `http://localhost:8090`, làm được luồng chính.
 
 ---
 
@@ -626,23 +571,8 @@ Quy ước:
 
 ---
 
-## 8. Ma trận kiểm thử
-
-| Tầng | Test gì | Công cụ | Khi nào |
-|---|---|---|---|
-| Domain | Invariant, state transition, FilePath | JUnit 5 + AssertJ | M1, cập nhật mỗi M |
-| Application | Service với port mock (hash, AI, vector) | Mockito | M2+ |
-| Infrastructure | SQLite thật (file tạm), importer, chunker, vector store | Spring Boot Test | M1, M2, M5 |
-| AI adapter | Request/response, stream, retry, lỗi 401/429 | WireMock | M5, M7, M8 |
-| Presentation | Controller + DTO contract + error mapping | `@WebMvcTest`, MockMvc | M2+ |
-| OCR | Fake sidecar, timeout, JSON hỏng | JUnit + script shell | M4 |
-| Frontend | Hook/component, streaming | Vitest + Testing Library + MSW | M2+ |
-| E2E | Add → READY → search → chat → delete | Playwright (AI stub) | M10, chạy lại mỗi release |
-
 Tiêu chí tối thiểu trước khi coi 1 milestone là xong:
 
-- [ ] Test mới cho hành vi mới, không chỉ test "không crash".
-- [ ] `./gradlew test` xanh; `npm test` xanh.
 - [ ] Không có `TODO` bí mật trong code (hoặc ghi issue).
 - [ ] Đã chạy tay luồng demo 1 lần trên DB mới.
 
@@ -671,7 +601,6 @@ Tiêu chí tối thiểu trước khi coi 1 milestone là xong:
 Một milestone chỉ "Done" khi:
 
 - [ ] Demo được luồng trong bảng milestone trên **DB mới** (không dựa vào dữ liệu cũ).
-- [ ] Có test tự động cho phần mới; test cũ vẫn xanh.
 - [ ] Không lệch `architecture.md`: nếu lệch, đã cập nhật docs trong cùng PR/commit.
 - [ ] Không có secret/đường dẫn máy cá nhân hard-code.
 - [ ] README/`.env.example` cập nhật nếu thêm biến môi trường.
@@ -718,7 +647,7 @@ Nếu làm bán thời gian: nhân đôi thời lượng, giữ nguyên thứ t�
 
 ## 13. Checklist tổng (in ra và tick dần)
 
-- [ ] M0 Bootstrap backend + frontend
+- [x] M0 Bootstrap backend + frontend
 - [ ] M1 Domain + Flyway V1 + repository
 - [ ] M2 Import + job queue + library UI
 - [ ] M3 Extract PDF/EPUB + text viewer

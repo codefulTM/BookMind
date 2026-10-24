@@ -53,8 +53,8 @@ Dựa trên: [requirements.md](./requirements.md) · Kế hoạch thi công: [im
 
 ### Đóng gói
 
-- Dev: Vite dev server (5173) proxy `/api` → Spring Boot (8080).
-- Dist: React build tĩnh được copy vào `static/` của Spring Boot → một jar duy nhất, mở tại `http://localhost:8080`.
+- Dev: Vite dev server (5173) proxy `/api` → Spring Boot (8090).
+- Dist: React build tĩnh được copy vào `static/` của Spring Boot → một jar duy nhất, mở tại `http://localhost:8090`.
 
 ---
 
@@ -408,7 +408,7 @@ src/
 - **Streaming chat:** `EventSource`/`fetch` stream đọc SSE, append token vào message đang hiển thị.
 - **Tiến độ xử lý:** ưu tiên SSE `book/{id}/events`; fallback polling 2s.
 - **Types:** sinh từ OpenAPI (`/v3/api-docs`) để tránh lệch DTO.
-- **i18n:** mọi string qua `t()`; mặc định `vi`.
+- **i18n:** mọi UI string qua `t()`; mặc định `vi`. Nội dung/metadata sách (title, subtitle, author, description, tag) là dữ liệu người dùng — render nguyên bản, không dịch và không bọc `t()`.
 
 ---
 
@@ -436,7 +436,7 @@ Tệp `application.yml` + `~/.bookmind/config.json` (ghi đè). Các nhóm chín
 ```yaml
 server:
   address: 127.0.0.1
-  port: 8080
+  port: 8090
 bookmind:
   home: ${BOOKMIND_HOME:~/.bookmind}
   library:
